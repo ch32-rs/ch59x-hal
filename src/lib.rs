@@ -4,7 +4,7 @@ use core::ptr;
 pub use ch59x::ch59x as pac;
 
 pub mod prelude;
-pub mod rcc;
+pub mod sysctl;
 pub mod serial;
 pub mod signature;
 
@@ -35,7 +35,7 @@ where
     const SAFE_ACCESS_SIG2: u8 = 0xA8;
 
     unsafe {
-        if (gintenr::read() & 0x08 != 0) {
+        if gintenr::read() & 0x08 != 0 {
             IRQ_STA = gintenr::read();
             gintenr::write(IRQ_STA & (!0x08));
         }

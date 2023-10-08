@@ -13,7 +13,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            voltage: true,
+            voltage: false,
             scan_clk: 0b11,
             duty: 0b10,
             bias: true,

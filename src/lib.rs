@@ -4,9 +4,10 @@ use core::ptr;
 pub use ch59x::ch59x as pac;
 
 pub mod prelude;
-pub mod sysctl;
 pub mod serial;
 pub mod signature;
+pub mod sysctl;
+pub mod lcd;
 
 /// Bits per second
 pub type BitsPerSecond = fugit::HertzU32;
@@ -30,6 +31,7 @@ where
     F: FnOnce() -> R,
 {
     use qingke::register::gintenr;
+
     const REG_SAFE_ACCESS_SIG: *mut u8 = 0x40001040 as *mut u8;
     const SAFE_ACCESS_SIG1: u8 = 0x57;
     const SAFE_ACCESS_SIG2: u8 = 0xA8;

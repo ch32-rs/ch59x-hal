@@ -1,11 +1,15 @@
 use ch59x::ch59x::SYS;
-use fugit::{HertzU32 as Hertz};
+use fugit::HertzU32 as Hertz;
 
 use crate::{pac::SYSCTL, with_safe_access};
 
 // No HSI
 const HSE_FREQUENCY: Hertz = Hertz::from_raw(32_000_000);
 const PLL_FREQUENCY: Hertz = Hertz::from_raw(480_000_000);
+
+static mut CLOCK: Clocks = Clocks {
+    hclk: Hertz::from_raw(6_400_000),
+};
 
 /// 32K clock source
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
@@ -20,9 +24,9 @@ pub enum Clock32KSrc {
 pub enum ClockSrc {
     // CK32K
     Clock32K,
-    // CK32M from HSE, then div
+    // CK32M from HSE, then div, 2 <= div <= 32
     HSE(u8),
-    // CK32M from PLL, then div
+    // CK32M from PLL, then div, 2 <= div <= 32
     PLL(u8),
 }
 
@@ -55,12 +59,12 @@ impl Config {
 
     pub fn pll_80mhz() -> Self {
         Self {
-            mux: ClockSrc::PLL(8),
+            mux: ClockSrc::PLL(6),
             ..Default::default()
         }
     }
 
-    pub fn freeze(self) -> Clocks {
+    pub fn freeze(self) {
         let sysctl = unsafe { &*SYSCTL::PTR };
         let sys = unsafe { &*SYS::PTR };
         with_safe_access(|| unsafe {
@@ -70,6 +74,7 @@ impl Config {
         });
         let hclk = match self.mux {
             ClockSrc::HSE(div) => {
+                assert!(div != 1, "1 means close HCLK");
                 with_safe_access(|| unsafe {
                     sys.clk_sys_cfg.write(|w| {
                         w.pll_pwr_en()
@@ -79,7 +84,7 @@ impl Config {
                             .clk_sys_mod()
                             .bits(0b10)
                             .clk_pll_div()
-                            .bits(div)
+                            .bits(div & 0x1f)
                     });
                     riscv::asm::nop();
                     riscv::asm::nop();
@@ -92,6 +97,7 @@ impl Config {
                 Hertz::from_raw(HSE_FREQUENCY.to_Hz() / (div as u32))
             }
             ClockSrc::PLL(div) => {
+                assert!(div != 1, "1 means close HCLK");
                 with_safe_access(|| unsafe {
                     sys.clk_sys_cfg.write(|w| {
                         w.pll_pwr_en()
@@ -101,7 +107,7 @@ impl Config {
                             .clk_sys_mod()
                             .bits(0b01)
                             .clk_pll_div()
-                            .bits(div)
+                            .bits(div & 0x1f)
                     });
                     riscv::asm::nop();
                     riscv::asm::nop();
@@ -120,10 +126,18 @@ impl Config {
                 .pll_config
                 .modify(|r, w| w.pll_cfg_dat().bits(r.pll_cfg_dat().bits() | (1 << 7)));
         });
-        Clocks { hclk }
+
+        unsafe {
+            CLOCK = Clocks { hclk };
+        }
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct Clocks {
     pub hclk: Hertz,
+}
+
+pub fn clocks() -> &'static Clocks {
+    unsafe { &CLOCK }
 }

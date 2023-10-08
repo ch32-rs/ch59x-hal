@@ -3,7 +3,7 @@ target = "riscv32imac-unknown-none-elf"
 
 [target.riscv32imac-unknown-none-elf]
 # runner = "wchisp flash"
-runner = "wlink -v flash"
+runner = "wlink -v flash --no-erase"
 rustflags = [
   "-C", "link-arg=-Tmemory.x",
   "-C", "link-arg=-Tlink.x",

@@ -8,6 +8,7 @@ const HSE_FREQUENCY: Hertz = Hertz::from_raw(32_000_000);
 const PLL_FREQUENCY: Hertz = Hertz::from_raw(480_000_000);
 
 static mut CLOCK: Clocks = Clocks {
+    // Power on default
     hclk: Hertz::from_raw(6_400_000),
 };
 
@@ -64,9 +65,34 @@ impl Config {
         }
     }
 
+    pub fn use_lse(mut self) -> Self {
+        self.clock32ksrc = Clock32KSrc::LSE;
+        self
+    }
+
     pub fn freeze(self) {
         let sysctl = unsafe { &*SYSCTL::PTR };
         let sys = unsafe { &*SYS::PTR };
+
+        match self.clock32ksrc {
+            Clock32KSrc::LSE => {
+                with_safe_access(|| {
+                    sys.ck32k_config.modify(|_, w| w.clk_xt32k_pon().set_bit());
+                });
+                unsafe {
+                    riscv::asm::delay(clocks().hclk.to_Hz() / 10 / 4);
+                }
+                with_safe_access(|| unsafe {
+                    sys.xt32k_tune.modify(|_, w| w.xt32k_i_tune().bits(0b01));
+                    sys.ck32k_config.modify(|_, w| w.clk_osc32k_xt().set_bit());
+                });
+                unsafe {
+                    riscv::asm::delay(clocks().hclk.to_Hz() / 1000);
+                }
+            }
+            _ => (),
+        }
+
         with_safe_access(|| unsafe {
             sysctl
                 .pll_config

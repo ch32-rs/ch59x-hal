@@ -1,13 +1,19 @@
 #![no_std]
+#![recursion_limit = "1024"]
 use core::ptr;
 
 pub use ch59x::ch59x as pac;
 
+pub mod lcd;
 pub mod prelude;
+pub mod rtc;
 pub mod serial;
 pub mod signature;
 pub mod sysctl;
-pub mod lcd;
+pub mod timer;
+
+pub mod isp;
+pub mod rt;
 
 /// Bits per second
 pub type BitsPerSecond = fugit::HertzU32;

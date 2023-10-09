@@ -41,7 +41,7 @@ pub struct Lcd {
 }
 
 impl Lcd {
-    pub fn new(lcd: LCD, config: Config) -> Self {
+    pub fn new(_lcd: LCD, config: Config) -> Self {
         let lcd = unsafe { &*pac::LCD::PTR };
         let sys = unsafe { &*pac::SYS::PTR };
 
@@ -84,7 +84,6 @@ impl Lcd {
             let data = (data as u32) << (n * 8);
             lcd.ram0
                 .modify(|r, w| unsafe { w.bits((r.bits() & !(0xff << (n * 8))) | data) });
-            return;
         } else if n < 8 {
             let lcd = unsafe { &*pac::LCD::PTR };
             let data = (data as u32) << ((n - 4) * 8);

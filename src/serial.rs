@@ -53,7 +53,7 @@ pub struct Uart {
 impl Uart {
     pub fn new(uart: pac::UART1, config: Config) -> Self {
         let uart1 = unsafe { &*pac::UART1::PTR };
-        let sys = unsafe { &*pac::SYS::PTR };
+        let _sys = unsafe { &*pac::SYS::PTR };
 
         // default on
         // sys.slp_clk_off0

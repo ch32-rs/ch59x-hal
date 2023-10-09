@@ -7,7 +7,10 @@ edition = "2021"
 
 [dependencies]
 # ch59x = { version = "0.1.8", features = ["ch59x", "rt"] }
-ch59x = { path="../ch32-rs-nightlies/ch59x", version = "0.1.7", features = ["ch59x", "rt"] }
+ch59x = { path = "../ch32-rs-nightlies/ch59x", version = "0.1.7", features = [
+    "ch59x",
+    #"rt",
+] }
 fugit = "0.3.7"
 fugit-timer = "0.1.3"
 
@@ -16,8 +19,9 @@ riscv = "0.10.1"
 
 embedded-hal = { version = "0.2.7", features = ["unproven"] }
 embedded-hal-alpha = { version = "=1.0.0-alpha.11", package = "embedded-hal" }
-qingke = "0.1.1"
+# qingke = "0.1.1"
+qingke = { path = "../qingke" }
 
 [dev-dependencies]
 panic-halt = "0.2.0"
-riscv-rt = "0.11.0"
+# riscv-rt = "0.11.0"
